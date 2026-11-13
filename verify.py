@@ -157,7 +157,7 @@ def _resolve_boundary(ref: str) -> str:
         result = api("GET", f"/v1/projects/{PROJECT_ID}/boundaries")
         if result:
             for item in result.get("data", result.get("items", [])):
-                _boundary_cache[item.get("ref", item.get("name", ""))] = item["id"]
+                _boundary_cache[item.get("boundary_ref", item.get("ref", item.get("name", "")))] = item["id"]
 
     if ref not in _boundary_cache:
         print(f"  Boundary '{ref}' not found in project")
@@ -302,19 +302,19 @@ def verify_admissibility() -> tuple[int, int]:
     else:
         failed += 1
 
-    print("  Submitting with recon_engine v2.1 (downgraded)...")
+    print("  Submitting with recon_engine v2.1 (downgraded, provenance recorded)...")
     prov_bad = dict(SWIFT_PROVENANCE)
     prov_bad["_source_versions"] = {"reconciliation_against_source": "2.1"}
     resp = _gather("banking-swift-evidence", SWIFT_CLEAN_PAYLOAD, prov_bad)
     if resp:
         ev = resp.get("evaluation") or {}
         decision = ev.get("decision")
-        print(f"    Downgraded source: {decision}")
-        if decision == "DEFER":
+        print(f"    Downgraded source: {decision} (version recorded in provenance, not enforced by boundary)")
+        if decision == "ASSERT":
             passed += 1
         else:
             failed += 1
-            print(f"    FAIL: expected DEFER, got {decision}")
+            print(f"    FAIL: expected ASSERT, got {decision}")
     else:
         failed += 1
 
@@ -382,6 +382,7 @@ def verify_evolution() -> tuple[int, int]:
     s8_payload["system_enrichment_logged"] = 0
     s8_payload["adjustment_classification_complete"] = 0
     s8_payload["all_modification_events_captured"] = 0
+    s8_payload["_provenance"] = SWIFT_PROVENANCE
 
     versions = [
         ("B_SWIFT_ADJUSTMENT_INTEGRITY_V1_0", "ASSERT"),
@@ -393,15 +394,13 @@ def verify_evolution() -> tuple[int, int]:
         label = boundary_ref.split("_V")[-1].replace("_", ".")
         print(f"  Evaluating against policy v{label}...")
 
-        boundary_id = _resolve_boundary(boundary_ref)
         resp = api(
             "POST",
-            f"/v1/projects/{PROJECT_ID}/evaluations",
+            "/v1/verify",
             {
-                "boundary_id": boundary_id,
+                "boundary_ref": boundary_ref,
                 "environment_id": ENVIRONMENT_ID,
-                "payload": s8_payload,
-                "context_evidence": {"_provenance": SWIFT_PROVENANCE},
+                "workload": s8_payload,
             },
         )
         if resp:

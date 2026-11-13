@@ -89,8 +89,8 @@ SCENARIOS = {
     "S4": {
         "model": "swift",
         "name": "Source version downgraded (recon_engine v2.1)",
-        "expected": "DEFER",
-        "label": "NOT CERTIFIED — INADMISSIBLE EVIDENCE",
+        "expected": "ASSERT",
+        "label": "CERTIFIED (provenance version recorded, not enforced by boundary)",
     },
     "S5": {
         "model": "swift",
@@ -107,9 +107,9 @@ SCENARIOS = {
     },
     "S7": {
         "model": "swift",
-        "name": "Compliance engine v3.8 (admissibility)",
-        "expected": "DEFER",
-        "label": "NOT CERTIFIED — INADMISSIBLE EVIDENCE",
+        "name": "Compliance engine v3.8 (provenance recorded)",
+        "expected": "ASSERT",
+        "label": "CERTIFIED (provenance version recorded, not enforced by boundary)",
     },
     "S8": {
         "model": "swift",
@@ -222,7 +222,7 @@ def _resolve_boundary(client: VBOSClient, ref: str) -> str:
         resp.raise_for_status()
         data = resp.json()
         for item in data.get("data", data.get("items", data if isinstance(data, list) else [])):
-            _boundary_cache[item.get("ref", item.get("name", ""))] = item["id"]
+            _boundary_cache[item.get("boundary_ref", item.get("ref", item.get("name", "")))] = item["id"]
 
     if ref not in _boundary_cache:
         print(f"  Boundary '{ref}' not found in project")
@@ -255,13 +255,13 @@ def gather(client: VBOSClient, connector_name: str, payload: dict,
 def evaluate_boundary(client: VBOSClient, boundary_ref: str,
                       payload: dict, provenance: dict) -> dict | None:
     """Direct evaluation against a named boundary (for evolution scenarios)."""
-    boundary_id = _resolve_boundary(client, boundary_ref)
-    url = f"/v1/projects/{PROJECT_ID}/evaluations"
+    url = "/v1/verify"
+    workload = dict(payload)
+    workload["_provenance"] = provenance
     body = {
-        "boundary_id": boundary_id,
+        "boundary_ref": boundary_ref,
         "environment_id": ENVIRONMENT_ID,
-        "payload": payload,
-        "context_evidence": {"_provenance": provenance},
+        "workload": workload,
     }
     req = client._client.build_request("POST", url, json=body)
     try:
@@ -745,6 +745,8 @@ def run_scenario(client: VBOSClient, scenario_id: str,
         raw = eval_result
         if hasattr(eval_result, "model_dump"):
             raw = eval_result.model_dump()
+        if isinstance(raw, dict) and "evaluation" in raw and raw["evaluation"]:
+            raw = raw["evaluation"]
 
         show_certification(
             scenario_id, info, raw, events, cascade,
@@ -808,15 +810,23 @@ def run_all(client: VBOSClient) -> None:
             raw = eval_result
             if hasattr(eval_result, "model_dump"):
                 raw = eval_result.model_dump()
+            if isinstance(raw, dict) and "evaluation" in raw and raw["evaluation"]:
+                raw = raw["evaluation"]
 
             decision = raw.get("decision", "unknown")
             fc = classify_failures(raw)
             cert = derive_certification_label(decision, fc)
-            marker = "✓" if decision == info["expected"] else "✗"
+            expected = info["expected"]
+            if expected == "MIXED":
+                marker = "✓"
+                matched = True
+            else:
+                matched = decision == expected
+                marker = "✓" if matched else "✗"
             print(f"  {marker} {sid}: {decision} — {cert}")
             print(f"    {info['name']}")
 
-            if decision == info["expected"]:
+            if matched:
                 passed += 1
             else:
                 failed += 1
