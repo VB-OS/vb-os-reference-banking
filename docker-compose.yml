@@ -1,0 +1,44 @@
+# Copyright 2026 MNC Labs, Inc. Licensed under Apache 2.0.
+# Author: Asaad Riaz
+
+services:
+  banking-postgres:
+    image: postgres:16-alpine
+    container_name: banking-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: banking
+      POSTGRES_PASSWORD: banking
+      POSTGRES_DB: banking
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./seed.sql:/docker-entrypoint-initdb.d/01-seed.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - banking-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U banking"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  banking-app:
+    build: .
+    container_name: banking-app
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://banking:banking@banking-postgres:5432/banking
+    networks:
+      - banking-net
+    depends_on:
+      banking-postgres:
+        condition: service_healthy
+    profiles:
+      - app
+
+volumes:
+  pgdata:
+
+networks:
+  banking-net:

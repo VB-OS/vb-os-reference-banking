@@ -1,0 +1,55 @@
+{
+  "name": "vb-os-reference-banking",
+  "version": "0.1.0",
+  "description": "VB-OS reference integration for deterministic operational completeness certification in banking workflows",
+  "homepage": "https://vbos.cloud",
+  "documentation": "https://vb-os.org",
+  "repository": "https://github.com/VB-OS/vb-os-reference-banking",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Asaad Riaz",
+    "company": "MNC Labs, Inc.",
+    "url": "https://github.com/anriaz"
+  },
+  "boundaries": [
+    {
+      "id": "B_SWIFT_ADJUSTMENT_INTEGRITY_V1_4",
+      "predicates": 10,
+      "scope": "banking/adjustment-certification"
+    },
+    {
+      "id": "B_SWIFT_ADJUSTMENT_INTEGRITY_V1_2",
+      "predicates": 8,
+      "scope": "banking/adjustment-certification"
+    },
+    {
+      "id": "B_SWIFT_ADJUSTMENT_INTEGRITY_V1_0",
+      "predicates": 7,
+      "scope": "banking/adjustment-certification"
+    },
+    {
+      "id": "B_BALANCE_SHEET_CERTIFICATION",
+      "predicates": 8,
+      "scope": "banking/adjustment-certification"
+    },
+    {
+      "id": "B_BALANCE_SHEET_CERTIFICATION_V0_9",
+      "predicates": 6,
+      "scope": "banking/adjustment-certification"
+    }
+  ],
+  "scenarios": {
+    "swift": 8,
+    "balance_sheet": 5,
+    "total": 13
+  },
+  "domain_models": [
+    "swift_adjustment_integrity",
+    "balance_sheet_certification"
+  ],
+  "connectors": [
+    "banking-swift-evidence",
+    "banking-balance-sheet-evidence"
+  ],
+  "acquisition_mode": "caller_supplied_payload"
+}
