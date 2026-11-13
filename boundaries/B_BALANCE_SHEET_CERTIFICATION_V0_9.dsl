@@ -27,8 +27,8 @@ require_evidence: certifier_sign_off_obtained
 require_evidence: intercompany_eliminations_verified
 require_evidence: fx_translation_adjustments_applied
 
-prohibit_evidence: unreviewed_manual_journal_entry | "Manual journal entries must go through review before consolidation"
-prohibit_evidence: retroactive_scope_change | "Retroactive scope changes invalidate the certification window"
+prohibit_evidence: unreviewed_manual_journal_entry
+prohibit_evidence: retroactive_scope_change
 
 predicate: subsidiary_data_complete: all_subsidiary_data_received == 1 | "Not all subsidiary data received for consolidation"
 predicate: adjustments_classified: adjustment_events_classified == 1 | "Adjustment events not fully classified"

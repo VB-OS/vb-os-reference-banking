@@ -30,8 +30,8 @@ require_evidence: dual_authorization_completed
 require_evidence: reconciliation_against_source
 require_evidence: nostro_balance_confirmed
 
-prohibit_evidence: manual_override_without_approval | "Manual overrides bypass the adjustment classification pipeline"
-prohibit_evidence: backdated_adjustment | "Backdated adjustments circumvent temporal integrity controls"
+prohibit_evidence: manual_override_without_approval
+prohibit_evidence: backdated_adjustment
 
 predicate: swift_message_valid: originating_swift_valid == 1 | "Originating SWIFT message failed validation"
 predicate: beneficiary_verified: beneficiary_account_verified == 1 | "Beneficiary account not verified against account master"
