@@ -6,10 +6,14 @@
 
 ---
 
-Complete setup and execution guide for the banking operational completeness
-certification pipeline. Covers SWIFT adjustment integrity and balance sheet
-adjustment certification -- both evaluated by VB-OS Cloud with evidence pushed
-from a local banking database via caller-supplied payload.
+This guide walks you through setting up and running the banking operational
+completeness certification pipeline. By the end, you will have a working
+integration that certifies SWIFT wire transfer adjustments and balance sheet
+consolidation against VB-OS Cloud -- demonstrating how operational gaps that
+pass traditional reconciliation are caught by VB-OS.
+
+See [README.md](README.md) for the full problem statement and what this
+integration demonstrates.
 
 ---
 

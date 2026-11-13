@@ -5,15 +5,58 @@
 
 ---
 
-A reference implementation demonstrating deterministic operational completeness
-certification for banking workflows through [VB-OS Cloud](https://vbos.cloud),
-the verification-as-a-service platform built by [MNC Labs](https://mnclabs.com).
-This integration exercises two domain models -- SWIFT adjustment integrity
-(cross-border wire transfers, 2.4M transactions) and balance sheet adjustment
-certification (multi-entity consolidation, 41,228 adjustments) -- with three
-failure classes, governance cascades, boundary evolution, and the "Traditional
-PASS / VB-OS NOT CERTIFIED" differentiation that proves operational completeness
-is a category of certification that did not exist before VB-OS.
+## The Problem
+
+Banks process millions of SWIFT wire transfers and balance sheet adjustments
+every quarter. When something goes wrong -- a suppressed enrichment event, a
+downgraded source system, an unauthorized manual override -- the gap is
+invisible to traditional reconciliation tools. Those tools ask one question:
+**do the numbers match?** If they do, the answer is PASS, even when the
+underlying process was incomplete, the evidence came from an untrusted source,
+or someone bypassed controls entirely.
+
+This creates real operational risk. A reconciliation that says PASS may be
+hiding suppressed events, unclassified adjustments, and unauthorized overrides.
+Regulators, auditors, and operations leaders have no way to know whether the
+process was actually complete -- only that the final numbers balanced.
+
+## What VB-OS Does Differently
+
+VB-OS introduces **operational completeness certification** -- a category of
+verification that did not exist before. Instead of asking "do the numbers
+match?", VB-OS asks three questions:
+
+1. **Is the evidence complete?** Were all required operational events captured,
+   classified, and submitted?
+2. **Is the evidence admissible?** Did it come from an authorized source system
+   at an approved version?
+3. **Is there evidence that should not exist?** Did someone inject a manual
+   override or backdate an adjustment?
+
+If any answer is wrong, VB-OS withholds certification and tells you exactly
+why: which evidence is missing, which source is untrusted, or which prohibited
+operation was detected. The decision is sealed, deterministic, and replayable --
+the same evidence against the same policy always produces the same result.
+
+## What This Integration Demonstrates
+
+This repository is a working reference implementation targeting two real banking
+workflows:
+
+- **SWIFT adjustment integrity** -- cross-border wire transfer processing with
+  2.4M transactions, 10 operational checkpoints, and 3 evolving policy versions
+  that show how gaps that were always present become visible as policy matures
+- **Balance sheet adjustment certification** -- multi-entity consolidation with
+  41,228 adjustments across financial and operational categories, where 5 missing
+  operational adjustments would pass traditional reconciliation but fail VB-OS
+  certification
+
+The integration includes 13 scenarios covering clean certifications, cascade
+failures, prohibited operations, inadmissible sources, boundary evolution, and
+the key differentiation: **Traditional Reconciliation says PASS while VB-OS
+says NOT CERTIFIED**.
+
+---
 
 VB-OS holds no banking or certification authority. It verifies provenance, not
 truth: was this evidence submitted, from what source, at what version, and does
